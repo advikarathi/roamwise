@@ -1,0 +1,35 @@
+{
+  "name": "roamwise",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "preview:build": "node scripts/build-preview.mjs",
+    "guides:build": "npx -y tsx scripts/build-guides.mts",
+    "demos:build": "npx -y tsx scripts/build-demos.mts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource/space-mono": "^5.3.0",
+    "canvas-confetti": "^1.9.4",
+    "motion": "^12.0.0",
+    "next": "^16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "esbuild": "^0.28.0",
+    "typescript": "^5.6.0",
+    "vitest": "^5.0.5"
+  }
+}
