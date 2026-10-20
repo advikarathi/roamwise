@@ -2,9 +2,9 @@
 
 **Set a budget and a vibe. A crew of four AI agents plans the whole trip: flights, a real hotel, and a swipeable deck of real things to do, all kept inside your budget.**
 
-**[Live demo →](https://YOUR-APP.vercel.app)** · Open a finished Lisbon, Tokyo or Paris trip in one click, no sign-up.
+**[Live demo →](https://roamwise-advika6.vercel.app)** · Open a finished Lisbon, Tokyo or Paris trip in one click, no sign-up.
 
-![Planning a trip in Roamwise](docs/demo.gif)
+<!-- Demo GIF: record ~15s of the app, save as docs/demo.gif, then replace this comment with: ![Planning a trip in Roamwise](docs/demo.gif) -->
 
 Built with **Next.js 16 · React 19 · TypeScript · Claude (Anthropic SDK) · Google Places · Motion · Vitest**.
 
