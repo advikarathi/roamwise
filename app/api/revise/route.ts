@@ -23,7 +23,7 @@ export async function POST(request: Request) {
         if (!changes.length) {
           emit({ type: "error", message: `The crew didn't catch that. Try "cheaper", "nonstop", "fancier stay" or "add a beach day".` });
         } else {
-          await revisePlan(plan, changes, { duffelToken: process.env.DUFFEL_TOKEN || undefined, anthropicKey: key, googleKey: process.env.GOOGLE_PLACES_API_KEY || undefined, pacing: true, loadGuide: readGuide }, emit);
+          await revisePlan(plan, changes, { duffelToken: process.env.DUFFEL_TOKEN || undefined, anthropicKey: key, googleKey: process.env.GOOGLE_PLACES_API_KEY || undefined, travelpayoutsToken: process.env.TRAVELPAYOUTS_TOKEN || undefined, travelpayoutsMarker: process.env.TRAVELPAYOUTS_MARKER || undefined, pacing: true, loadGuide: readGuide }, emit);
         }
       } catch (err) {
         emit({ type: "error", message: err instanceof Error ? err.message : "Couldn't update the trip." });
