@@ -2,6 +2,7 @@ import type { Emit, FlightOption, TripRequest } from "../types";
 import { flightAirport } from "../airports";
 import { duffelFlights } from "../providers/duffel";
 import { mockFlights } from "../providers/mock";
+import { travelpayoutsFlights } from "../providers/travelpayouts";
 import { pause, type AgentContext } from "./context";
 
 /** Flights agent ("Skye"): searches round trips and shortlists cheapest / best value / fastest. */
@@ -11,14 +12,15 @@ export async function flightsAgent(trip: TripRequest, ctx: AgentContext, emit: E
   emit({ type: "status", agent: "flights", state: "working", message: `Checking every route out of ${req.origin}…` });
   await pause(ctx, 900);
 
+  // Real data first: Duffel live (bookable), then Travelpayouts (real recent fares), then Duffel's
+  // test sandbox (practice data), and only then estimated sample fares, which are labeled as such.
+  const tryIt = async (run: () => Promise<FlightOption[]>) => { try { return await run(); } catch (err) { console.error(err); return []; } };
+  const duffelLive = ctx.duffelToken && !ctx.duffelToken.startsWith("duffel_test_") ? ctx.duffelToken : undefined;
+  const duffelTest = ctx.duffelToken?.startsWith("duffel_test_") ? ctx.duffelToken : undefined;
   let options: FlightOption[] = [];
-  if (ctx.duffelToken) {
-    try {
-      options = await duffelFlights(req, ctx.duffelToken);
-    } catch (err) {
-      console.error(err);
-    }
-  }
+  if (duffelLive) options = await tryIt(() => duffelFlights(req, duffelLive));
+  if (!options.length && ctx.travelpayoutsToken) options = await tryIt(() => travelpayoutsFlights(req, ctx.travelpayoutsToken!, ctx.travelpayoutsMarker));
+  if (!options.length && duffelTest) options = await tryIt(() => duffelFlights(req, duffelTest));
   if (!options.length) options = mockFlights(req);
 
   emit({ type: "status", agent: "flights", state: "working", message: "Comparing prices, stops and times…" });

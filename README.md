@@ -104,7 +104,8 @@ Lead images that are logos, maps, flags or diagrams are rejected by filename. Th
 | Google Places (New) | Hotels, restaurants, sights, photos, ratings | Paid, free monthly allowance, daily cap | Pre-built guides |
 | Wikivoyage | Real hotels and things to do per city | Free (pre-built) | Sample data |
 | Wikipedia / Wikidata / Commons | Landmarks, descriptions, photos | Free (pre-built) | Colored banners |
-| Duffel | Real flights | Test free; live per-search fees | Sample fares from distance |
+| Travelpayouts (Aviasales) | Real recent fares: airline, flight number, departure, stops, exact-fare link | Free | Duffel or sample fares |
+| Duffel | Real, bookable flights | Test free; live per-search fees | Travelpayouts or sample fares |
 | Claude (Anthropic) | Trip assistant, extra activity ideas, parsing change requests | Paid per use | Built-in answers and rules |
 | Open-Meteo | Forecast, or last year's weather for far-off dates | Free | No weather |
 | Resend | Emailing the plan | Free tier | Opens the user's mail app |
@@ -113,7 +114,7 @@ Lead images that are logos, maps, flags or diagrams are rejected by filename. Th
 ## Tests
 
 ```bash
-npm test          # Vitest: 33 tests
+npm test          # Vitest: 37 tests
 npm run typecheck
 ```
 
@@ -140,7 +141,8 @@ With **no keys** everything still works: 50 pre-built cities with real places an
 |---|---|
 | `GOOGLE_PLACES_API_KEY` | Real hotel/restaurant photos and ratings everywhere |
 | `ANTHROPIC_API_KEY` | Claude trip assistant and extra activity ideas (`ANTHROPIC_MODEL` to override; default `claude-opus-5-5`) |
-| `DUFFEL_TOKEN` | Real flights (`duffel_test_…` returns practice data) |
+| `TRAVELPAYOUTS_TOKEN`, `TRAVELPAYOUTS_MARKER` | Real recent flight fares with exact-fare links (free) |
+| `DUFFEL_TOKEN` | Real, bookable flights (`duffel_test_…` returns practice data) |
 | `RESEND_API_KEY`, `RESEND_FROM` | Sending the plan by email |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Shared trip links that survive restarts |
 | `WIKIMEDIA_CONTACT` | Contact sent in the User-Agent, per Wikimedia policy |
@@ -176,5 +178,5 @@ Push to GitHub, import on [Vercel](https://vercel.com), and add the env vars. `n
 ## Limitations
 
 - Hotel prices are estimates (Google doesn't publish hotel rates); booking links show live prices.
-- Exact-flight links need a live Duffel key; sample and test fares link to the route and dates instead.
+- Real fares come from Travelpayouts (searches in the last 48 hours) or Duffel live; routes and dates nobody searched recently fall back to clearly labeled sample fares.
 - Cities outside the 50 pre-built guides use live free APIs and are less polished.

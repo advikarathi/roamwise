@@ -33,6 +33,8 @@ export interface FlightOption {
   returnFlightNumbers?: string[];
   /** Made-up demo fare (no flight data key), so there is no exact flight to link to. */
   sample?: boolean;
+  /** A real fare travelers found in the last ~48 hours (Travelpayouts), not a live, bookable price. */
+  recentFare?: boolean;
 }
 
 export interface StayOption {

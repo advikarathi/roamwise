@@ -61,7 +61,7 @@ export function flightLinks(plan: TripPlan, f: FlightOption): OutLink[] {
   const kayakFilters = [nonstop ? "stops=0" : "", !f.sample && f.carrierCode ? `airlines=${f.carrierCode}` : ""].filter(Boolean).join(";");
   const flightNo = !f.sample ? f.flightNumbers?.[0] : undefined;
   return [
-    ...(f.bookingUrl ? [{ label: "Book this fare", url: f.bookingUrl }] : []),
+    ...(f.bookingUrl ? [{ label: f.recentFare ? "This exact fare (Aviasales)" : "Book this fare", url: f.bookingUrl }] : []),
     { label: "Google Flights", url: `https://www.google.com/travel/flights?q=${enc(gq)}` },
     {
       label: "Kayak",

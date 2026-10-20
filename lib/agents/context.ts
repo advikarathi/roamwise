@@ -5,6 +5,9 @@ export interface AgentContext {
   anthropicKey?: string;
   /** Google Places (New) key: real photos, ratings and reviews. Server only. */
   googleKey?: string;
+  /** Travelpayouts (Aviasales) data token: real recent fares with exact-fare links. Server only. */
+  travelpayoutsToken?: string;
+  travelpayoutsMarker?: string;
   /** Reads a pre-built city guide (disk on the server, a static file in the browser). */
   loadGuide?: GuideLoader;
   /** Add small pauses so the crew animation is readable in demo mode. */

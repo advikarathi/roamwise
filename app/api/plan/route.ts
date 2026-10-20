@@ -22,6 +22,8 @@ export async function POST(request: Request) {
             duffelToken: process.env.DUFFEL_TOKEN || undefined,
             anthropicKey: process.env.ANTHROPIC_API_KEY || undefined,
             googleKey: process.env.GOOGLE_PLACES_API_KEY || undefined,
+            travelpayoutsToken: process.env.TRAVELPAYOUTS_TOKEN || undefined,
+            travelpayoutsMarker: process.env.TRAVELPAYOUTS_MARKER || undefined,
             pacing: true,
             loadGuide: readGuide,
           },

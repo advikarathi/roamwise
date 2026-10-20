@@ -46,7 +46,7 @@ export function BoardingPass({ flights, selectedId, onSelect, links }: {
               </div>
               <div style={{ textAlign: "right" }}>
                 <div className="pass-code">{f.destination}</div>
-                <div className="pass-time">Lands {f.arriveTime}{f.arriveNextDay ? " +1" : ""}</div>
+                <div className="pass-time">{f.arriveTime ? `Lands ${f.arriveTime}${f.arriveNextDay ? " +1" : ""}` : `${hours(f.durationMinutes)} flight`}</div>
               </div>
             </div>
           </motion.div>
@@ -71,7 +71,9 @@ export function BoardingPass({ flights, selectedId, onSelect, links }: {
           ? f.carrierCode
             ? "This fare is Duffel test data: the airline is real but the flight, times and price are made up, so there is no exact flight to open. A live Duffel key gives real flights. These links search your dates, travelers and stops."
             : "This is a sample fare (no live flight data yet), so there is no exact flight to open. These links search your dates, travelers and stops; pick the flight you like there."
-          : `Find this ${f.carrier} flight${f.flightNumbers?.length ? ` (${f.flightNumbers.join(" + ")})` : ""} on`}
+          : f.recentFare
+            ? `Real fare: ${f.carrier} ${f.flightNumbers?.join(" + ") ?? ""}, found by travelers in the last 48 hours. Fares change; "This exact fare" opens it with today's price.`
+            : `Find this ${f.carrier} flight${f.flightNumbers?.length ? ` (${f.flightNumbers.join(" + ")})` : ""} on`}
       </p>
       <LinkRow links={links} label="Book flights" />
     </section>
