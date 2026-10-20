@@ -1,5 +1,6 @@
 "use client";
 import { motion, useReducedMotion } from "motion/react";
+import type { AccountTripSummary } from "@/lib/userStore";
 import type { SavedTrip } from "./Trip";
 import { Stamp } from "./Stamp";
 
@@ -7,8 +8,14 @@ function stampDate(iso: string) {
   return new Date(`${iso}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "2-digit" }).toUpperCase();
 }
 
-export function Passport({ trips, onPlan }: { trips: SavedTrip[]; onPlan: () => void }) {
+export function Passport({ trips: local, accountTrips = [], signedIn = false, onOpen, onDelete, onPlan }: {
+  trips: SavedTrip[]; accountTrips?: AccountTripSummary[]; signedIn?: boolean;
+  onOpen?: (id: string) => void; onDelete?: (id: string) => void; onPlan: () => void;
+}) {
   const reduce = useReducedMotion();
+  // Account trips first (they can be reopened), then stamps only saved in this browser.
+  const inAccount = new Set(accountTrips.map((t) => `${t.code}|${t.startDate}`));
+  const trips: (SavedTrip & { id?: string })[] = [...accountTrips, ...local.filter((t) => !inAccount.has(`${t.code}|${t.startDate}`))];
   const countries = new Set(trips.map((t) => t.country)).size;
 
   return (
@@ -19,6 +26,7 @@ export function Passport({ trips, onPlan }: { trips: SavedTrip[]; onPlan: () => 
             <div style={{ fontWeight: 800, fontSize: 30, letterSpacing: "-0.02em" }}>My passport</div>
             <div style={{ opacity: 0.85 }}>
               {trips.length ? `${trips.length} ${trips.length === 1 ? "trip" : "trips"} planned, ${countries} ${countries === 1 ? "country" : "countries"}` : "Every trip you save gets a stamp"}
+              {signedIn ? " · saved to your account" : ""}
             </div>
           </div>
           <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#ffc93c" strokeWidth="1.6" aria-hidden="true">
@@ -37,6 +45,12 @@ export function Passport({ trips, onPlan }: { trips: SavedTrip[]; onPlan: () => 
                 transition={{ delay: i * 0.06, type: "spring", stiffness: 300, damping: 18 }}>
                 <Stamp city={t.city} code={t.code} date={stampDate(t.startDate)} color={t.color} tilt={((i * 37) % 24) - 12} />
                 <span className="small muted">${t.total.toLocaleString()} total</span>
+                {t.id && (
+                  <div className="trip-actions">
+                    <button type="button" className="mini-btn" onClick={() => onOpen?.(t.id!)}>Open</button>
+                    <button type="button" className="mini-btn" aria-label={`Delete ${t.city} trip`} onClick={() => onDelete?.(t.id!)}>✕</button>
+                  </div>
+                )}
               </motion.div>
             ))
           )}

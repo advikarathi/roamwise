@@ -21,6 +21,7 @@ Built with **Next.js 16 · React 19 · TypeScript · Claude (Anthropic SDK) · G
 - **Swipe to plan.** Swipe right on ideas; they drop into a day-by-day itinerary that dodges rainy days in the forecast.
 - **Edit everything.** Move plans between days, reorder, remove, add your own, or ask the crew in plain English ("make it cheaper", "nonstop", "add a beach day").
 - **Ask the trip assistant.** A chatbot that knows your flight, hotel, budget and every day of the plan (Claude, with a built-in fallback).
+- **Sign in to keep your trips.** Optional GitHub/Google sign-in (Auth.js). Saved trips keep the whole plan, kept ideas and day edits, and reopen on any device.
 - **Plan with friends.** Share a link; everyone swipes on their own phone and the plan keeps what most of the group likes.
 - **Book and share.** Prefilled links to Google Flights, Kayak, Booking.com and Airbnb; email the plan; export it as a page.
 
@@ -91,6 +92,8 @@ Lead images that are logos, maps, flags or diagrams are rejected by filename. Th
 
 **Slow work off the critical path.** Planning returns in seconds; the events search (about a minute) starts after the board is on screen and streams into its own section and the deck.
 
+**Auth without a user table.** Sign-in uses Auth.js with signed JWT session cookies; each account gets a stable id (`github:123`), and its trips live in one Redis hash, capped at 50, re-saving updates in place. With no provider configured the sign-in button simply doesn't render.
+
 **Keys never reach the browser.** Google photos are served through `/api/place-photo`, which resolves the photo reference server-side and redirects. Claude, Duffel and Resend calls all run in API routes.
 
 **Safe to put on the internet.** Per-visitor rate limits on planning, chat, email and photos, plus daily caps on paid Google calls (`lib/rateLimit.ts`). Past a cap, the app quietly falls back to the free guides instead of failing.
@@ -114,7 +117,7 @@ Lead images that are logos, maps, flags or diagrams are rejected by filename. Th
 ## Tests
 
 ```bash
-npm test          # Vitest: 37 tests
+npm test          # Vitest: 41 tests
 npm run typecheck
 ```
 
@@ -144,7 +147,8 @@ With **no keys** everything still works: 50 pre-built cities with real places an
 | `TRAVELPAYOUTS_TOKEN`, `TRAVELPAYOUTS_MARKER` | Real recent flight fares with exact-fare links (free) |
 | `DUFFEL_TOKEN` | Real, bookable flights (`duffel_test_…` returns practice data) |
 | `RESEND_API_KEY`, `RESEND_FROM` | Sending the plan by email |
-| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Shared trip links that survive restarts |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Shared trip links and account trips that survive restarts |
+| `AUTH_SECRET`, `AUTH_GITHUB_ID`/`SECRET`, `AUTH_GOOGLE_ID`/`SECRET` | Optional sign-in (the button only appears when a provider is configured) |
 | `WIKIMEDIA_CONTACT` | Contact sent in the User-Agent, per Wikimedia policy |
 | `GOOGLE_DAILY_SEARCH_CAP`, `GOOGLE_DAILY_PHOTO_CAP`, `EVENTS_DAILY_CAP` | Spending caps (defaults 400, 3,000 and 150/day) |
 
@@ -160,7 +164,8 @@ With **no keys** everything still works: 50 pre-built cities with real places an
 ## Project layout
 
 ```
-app/                     pages and API routes (plan, revise, events, chat, email, place-photo, trips)
+app/                     pages and API routes (plan, revise, events, chat, email, place-photo, trips, auth, me/trips)
+auth.ts                  Auth.js config (GitHub / Google, JWT sessions)
 components/              Setup, crew screen, trip board, swipe deck, itinerary editor, chat
 lib/agents/              orchestrator + budget, flights, stays, activities, revise
 lib/providers/           Google Places, Wikivoyage, Wikipedia geosearch, Duffel, Claude, events (web search), samples

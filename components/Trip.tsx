@@ -49,13 +49,15 @@ const meKey = (id: string) => `roamwise:me:${id}`;
 const readMe = (id?: string) => { try { return id ? localStorage.getItem(meKey(id)) : null; } catch { return null; } };
 const writeMe = (id: string, name: string) => { try { localStorage.setItem(meKey(id), name); } catch { /* fine */ } };
 
-export function Trip({ plan: initialPlan, mode, shared, onSave, onNew, initialKeeps }: {
+export function Trip({ plan: initialPlan, mode, shared, onSave, onNew, initialKeeps, initialEdits }: {
   plan: TripPlan;
   /** Demo trips arrive with ideas already kept, so every section is filled in. */
   initialKeeps?: string[];
+  /** A trip reopened from the account comes back with its day edits. */
+  initialEdits?: PlannerEdits;
   mode: RunMode;
   shared?: SharedTrip;
-  onSave: (t: SavedTrip) => void;
+  onSave: (t: SavedTrip, full: { plan: TripPlan; keeps: string[]; edits: PlannerEdits }) => void;
   onNew: () => void;
 }) {
   const [plan, setPlan] = useState(initialPlan);
@@ -96,7 +98,7 @@ export function Trip({ plan: initialPlan, mode, shared, onSave, onNew, initialKe
   const transfer = landing ? airportTransfer(landing, stay, taxiRate(landing.countryCode)) : undefined;
 
   // The day plan: suggested by the crew, then whatever the traveler changes in "Edit days".
-  const [edits, setEdits] = useState<PlannerEdits>(NO_EDITS);
+  const [edits, setEdits] = useState<PlannerEdits>(initialEdits ?? NO_EDITS);
   const days = dayCount(plan.nights, flight.arriveNextDay);
   const wet = Array.from({ length: days }, (_, i) => {
     const w = weather?.days.find((d) => d.date === isoPlus(req.startDate, i + (flight.arriveNextDay ? 1 : 0)));
@@ -375,6 +377,10 @@ export function Trip({ plan: initialPlan, mode, shared, onSave, onNew, initialKe
               endDate: req.endDate,
               total,
               savedAt: Date.now(),
+            }, {
+              plan: { ...plan, selectedFlightId: flight.id, selectedStayId: stay.id },
+              keeps: kept.map((a) => a.id),
+              edits,
             })}
           >
             <Book size={24} /> Stamp my passport

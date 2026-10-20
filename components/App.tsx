@@ -4,7 +4,11 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { runPlan, type RunMode } from "@/lib/runPlan";
 import type { PlanEvent, TripPlan, TripRequest } from "@/lib/types";
+import { useSession } from "next-auth/react";
+import type { AccountTrip, AccountTripSummary } from "@/lib/userStore";
+import { AuthButton } from "./AuthButton";
 import { Book } from "./Icons";
+import type { PlannerEdits } from "./trip/Itinerary";
 import { Passport } from "./Passport";
 import { ORDER, Planning, type CrewStatus } from "./Planning";
 import { Setup, defaultRequest } from "./Setup";
@@ -53,6 +57,38 @@ export function App({ mode = "server", sharedId }: { mode?: RunMode; sharedId?: 
   const [sharedError, setSharedError] = useState<string | null>(null);
   const runId = useRef(0);
   const [demoKeeps, setDemoKeeps] = useState<string[] | undefined>(undefined);
+  const [savedEdits, setSavedEdits] = useState<PlannerEdits | undefined>(undefined);
+
+  // Account: trips saved to the signed-in user (in Redis), alongside the browser-only passport.
+  const { status: authStatus } = useSession();
+  const signedIn = authStatus === "authenticated";
+  const [accountTrips, setAccountTrips] = useState<AccountTripSummary[]>([]);
+  const [accountNote, setAccountNote] = useState<string | null>(null);
+  const refreshAccount = () =>
+    fetch("/api/me/trips", { cache: "no-store" })
+      .then((r) => (r.ok ? (r.json() as Promise<{ trips: AccountTripSummary[] }>) : { trips: [] }))
+      .then((j) => setAccountTrips(j.trips ?? []))
+      .catch(() => {});
+  useEffect(() => { if (signedIn) void refreshAccount(); else setAccountTrips([]); }, [signedIn]);
+
+  /** Reopens a trip saved to the account, with its kept ideas and day edits. */
+  async function openSaved(id: string) {
+    setAccountNote(null);
+    const res = await fetch(`/api/me/trips/${encodeURIComponent(id)}`, { cache: "no-store" });
+    if (!res.ok) { setAccountNote("Couldn't open that trip. Try again."); return; }
+    const t = (await res.json()) as AccountTrip;
+    runId.current++;
+    setShared(undefined);
+    setDemoKeeps(t.keeps);
+    setSavedEdits(t.edits);
+    setPlan(t.plan);
+    setRequest(t.plan.request);
+    setScreen("trip");
+  }
+  async function deleteSaved(id: string) {
+    await fetch(`/api/me/trips/${encodeURIComponent(id)}`, { method: "DELETE" });
+    void refreshAccount();
+  }
   const [demoError, setDemoError] = useState<string | null>(null);
 
   /** Opens a ready-made trip, moved to start a few weeks from today so the dates never look stale. */
@@ -71,6 +107,7 @@ export function App({ mode = "server", sharedId }: { mode?: RunMode; sharedId?: 
       runId.current++;
       setShared(undefined);
       setDemoKeeps(demo.keeps);
+      setSavedEdits(undefined);
       setPlan(moved);
       setRequest(moved.request);
       setScreen("trip");
@@ -133,7 +170,13 @@ export function App({ mode = "server", sharedId }: { mode?: RunMode; sharedId?: 
     }
   }
 
-  function save(t: SavedTrip) {
+  function save(t: SavedTrip, full?: { plan: TripPlan; keeps: string[]; edits: PlannerEdits }) {
+    // Signed in: also save the whole trip to the account, so it can be reopened anywhere.
+    if (signedIn && full) {
+      fetch("/api/me/trips", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...t, ...full }) })
+        .then(async (r) => { if (!r.ok) setAccountNote(((await r.json()) as { error?: string }).error ?? "Couldn't save to your account."); void refreshAccount(); })
+        .catch(() => setAccountNote("Couldn't save to your account. It's still in this browser."));
+    }
     const next = [t, ...trips.filter((x) => !(x.code === t.code && x.startDate === t.startDate))];
     setTrips(next);
     storeTrips(next);
@@ -153,9 +196,12 @@ export function App({ mode = "server", sharedId }: { mode?: RunMode; sharedId?: 
           </svg>
           Roamwise
         </button>
-        <button type="button" className="passport-btn" onClick={() => setScreen("passport")}>
-          <Book size={20} /> Passport <span className="count">{trips.length}</span>
-        </button>
+        <div className="topbar-right">
+          <AuthButton onMyTrips={() => setScreen("passport")} />
+          <button type="button" className="passport-btn" onClick={() => setScreen("passport")}>
+            <Book size={20} /> Passport <span className="count">{Math.max(trips.length, accountTrips.length)}</span>
+          </button>
+        </div>
       </nav>
 
       <AnimatePresence mode="wait">
@@ -168,10 +214,11 @@ export function App({ mode = "server", sharedId }: { mode?: RunMode; sharedId?: 
         >
           {screen === "setup" && sharedError && <div className="error-box narrow" role="alert" style={{ marginBottom: 20 }}>{sharedError}</div>}
           {screen === "setup" && demoError && <div className="error-box narrow" role="alert" style={{ marginBottom: 20 }}>{demoError}</div>}
-          {screen === "setup" && <Setup initial={request} onSubmit={(r) => { setShared(undefined); setDemoKeeps(undefined); start(r); }} onDemo={openDemo} />}
+          {screen === "setup" && <Setup initial={request} onSubmit={(r) => { setShared(undefined); setDemoKeeps(undefined); setSavedEdits(undefined); start(r); }} onDemo={openDemo} />}
           {screen === "planning" && <Planning request={request} crew={crew} error={error} onBack={() => setScreen("setup")} />}
-          {screen === "trip" && plan && <Trip key={shared?.id ?? plan.request.destination + plan.request.startDate + runId.current} plan={plan} mode={mode} shared={shared} initialKeeps={demoKeeps} onSave={save} onNew={() => setScreen("setup")} />}
-          {screen === "passport" && <Passport trips={trips} onPlan={() => setScreen("setup")} />}
+          {screen === "trip" && plan && <Trip key={shared?.id ?? plan.request.destination + plan.request.startDate + runId.current} plan={plan} mode={mode} shared={shared} initialKeeps={demoKeeps} initialEdits={savedEdits} onSave={save} onNew={() => setScreen("setup")} />}
+          {screen === "passport" && accountNote && <div className="error-box narrow" role="alert" style={{ marginBottom: 20 }}>{accountNote}</div>}
+          {screen === "passport" && <Passport trips={trips} accountTrips={accountTrips} signedIn={signedIn} onOpen={openSaved} onDelete={deleteSaved} onPlan={() => setScreen("setup")} />}
         </motion.main>
       </AnimatePresence>
 

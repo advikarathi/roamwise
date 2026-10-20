@@ -330,3 +330,14 @@ button { cursor: pointer; }
 /* getting around */
 .route-line { margin-top: 6px; padding-top: 6px; border-top: 2px dashed var(--ground-deep); font-size: 13px; line-height: 1.5; }
 .route-line a { margin-left: 6px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+
+/* account */
+.topbar-right { display: flex; gap: 8px; align-items: center; }
+.auth { position: relative; }
+.auth-avatar { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--ink); object-fit: cover; }
+.auth-initial { display: inline-grid; place-items: center; background: var(--sun); font-weight: 800; font-size: 13px; text-transform: uppercase; }
+.auth-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 40; min-width: 230px; padding: 8px; background: var(--paper); border: var(--line); border-radius: 16px; box-shadow: var(--lift); display: grid; gap: 4px; }
+.auth-menu button { text-align: left; padding: 10px; border: 0; border-radius: 10px; background: none; font-weight: 700; }
+.auth-menu button:hover { background: var(--ground); }
+@media (max-width: 480px) { .auth-label { display: none; } }
+.trip-actions { display: flex; gap: 6px; justify-content: center; margin-top: 4px; }
